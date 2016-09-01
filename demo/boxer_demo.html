@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Boxer demo</title>
+</head>
+<body>
+<script src="es6-shim.min.js"></script>
+<script src="../boxer.js"></script>
+<script>
+    var myState = new Boxer( 'myState', true );
+
+
+    myState.$addEventListener( function ( event ) {
+        console.log( 'event for all' );
+    } );
+
+    myState.$addEventListener( 'test', function ( event ) {
+        console.log( 'event for test' );
+    } );
+
+    myState.$initProperty( 'test' );
+
+    myState.test = 4;
+
+    console.log( 1, myState.test );
+    console.log( 2, myState );
+    console.log( 3, myState.$isMutable() );
+    console.log( 4, myState.$isProtected() );
+    console.log( 5, myState.size );
+    console.log( 6, myState.$get( 'size' ) );
+
+    myState.$freeze();
+    myState.$set( 'size2', 2 );
+    myState.$initProperty( 'size3' );
+    myState.size3 = '3';
+    console.log( 7, myState.$get( 'size2' ) );
+    console.log( 8, myState.$size3 );
+    myState.$unfreeze();
+    console.log( 'myState.$isFrozen()', myState.$isFrozen() );
+    myState.$set( 'size2', 2 );
+    myState.$initProperty( 'size3' );
+    myState.size3 = '3';
+    console.log( 8, myState.$get( 'size2' ) );
+    console.log( 9, myState.size3 );
+    var y = {};
+    myState.$set( y, 2 );
+    console.log( 10, myState[ y ] );
+    console.log( 12, myState._$$boxerStore );
+    console.log( 13, myState.$getBoxerById( 0 ) );
+    console.log( 14, myState.$getBoxerById( 1 ) );
+</script>
+</body>
+</html>

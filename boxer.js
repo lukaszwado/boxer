@@ -10,14 +10,14 @@
 
 /**
  *
- * TODO - all data properties should be immutable when accessing them and object is immutable
- * TODO - think if accessing Boxers by ID has sens if you can pass direct reference instead
+ * TODO - should all of the data be immutable when accessing them and object is set to be immutable?
+ * TODO - think if accessing Boxers by ID has sens when you can pass direct reference instead
  * TODO - think if name is necessary - maybe it's better to have ID only
- * TODO - add property to set multiple
+ * TODO - add property to "set multiple"
  * TODO - improve error logging
- * TODO - build proof of design with angular
- * TODO - create build process with Gulp or Grunt
- * TODO - publish on Git and npm
+ * TODO - build proof of design with angular 2
+ * TODO - create proper build process with Gulp or Grunt
+ * TODO - publish with npm
  *
  */
 
@@ -54,7 +54,7 @@ var Boxer = function Boxer( name, registered, immutable, protect ) {
   /* Is immutable */
   this._$$immutable = this._$$booleanOrTrue( immutable );//typeof immutable !== 'boolean' ? true : immutable;
 
-  this._$$frozen = false; //if object is frozen you cannot assign new values to it's properties
+  this._$$frozen = false; //if object is frozen you cannot assign new values to its properties
 
   /* Set proxy trap to prevent setting uninitialized properties - ES6 ONLY */
   var protectSetting = this._$$booleanOrTrue( protect ) //protect !== 'boolean' ? true : protect
@@ -531,52 +531,3 @@ Boxer.prototype.$removeEventListeners = function $removeAllEvents( key ) {
 
   return this;
 };
-
-
-/**
- *
- * TESTING
- *
- * */
-
-var myState = new Boxer( 'myState', true );
-
-
-myState.$addEventListener( function ( event ) {
-  console.log( 'event for all' );
-} );
-
-myState.$addEventListener( 'test', function ( event ) {
-  console.log( 'event for test' );
-} );
-
-myState.$initProperty( 'test' );
-
-myState.test = 4;
-
-console.log( 1, myState.test );
-console.log( 2, myState );
-console.log( 3, myState.$isMutable() );
-console.log( 4, myState.$isProtected() );
-console.log( 5, myState.size );
-console.log( 6, myState.$get( 'size' ) );
-
-myState.$freeze();
-myState.$set( 'size2', 2 );
-myState.$initProperty( 'size3' );
-myState.size3 = '3';
-console.log( 7, myState.$get( 'size2' ) );
-console.log( 8, myState.$size3 );
-myState.$unfreeze();
-console.log( 'myState.$isFrozen()', myState.$isFrozen() );
-myState.$set( 'size2', 2 );
-myState.$initProperty( 'size3' );
-myState.size3 = '3';
-console.log( 8, myState.$get( 'size2' ) );
-console.log( 9, myState.size3 );
-var y = {};
-myState.$set( y, 2 );
-console.log( 10, myState[ y ] );
-console.log( 12, myState._$$boxerStore );
-console.log( 13, myState.$getBoxerById( 0 ) );
-console.log( 14, myState.$getBoxerById( 1 ) );
