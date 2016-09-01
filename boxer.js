@@ -226,20 +226,20 @@ Boxer.prototype._$$protect = function _$$protect( boxerObj ) {
   return new Proxy( boxerObj, {
     set: function ( _that, key, val ) {
       var isPermitted = key.indexOf( '_$$' ) === 0 //only private variable can be changed without prior definition
+        , wasPropertyInitialised = _that._wasPropertyInitialized( key )
         ;
 
+      /* TODO - improve setter performance */
       /* Allow to set permitted values only */
       if ( isPermitted ) {
         _that[ key ] = val;
-      } else if ( _that._wasPropertyInitialized( key ) ) {
-        if ( !_that._$$frozen ) {
-          _that.$set( key, val );
-        } else {
-          console.error( 'Boxer is frozen - to assign value to Boxer please unfreeze it first.', {
-            boxer: _that
-          } );
-          console.trace();
-        }
+      } else if ( wasPropertyInitialised && !_that._$$frozen ) {
+        _that.$set( key, val );
+      } else if ( wasPropertyInitialised && _that._$$frozen ) {
+        console.error( 'Boxer is frozen - to assign value to Boxer please unfreeze it first.', {
+          boxer: _that
+        } );
+        console.trace();
       } else {
         console.trace();
         throw 'Cannot assign value (' + val + ') to property (' + key + ') which wasn\'t initialised, use $set or $initProperty methods to create new value';
