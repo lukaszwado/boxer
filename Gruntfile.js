@@ -14,15 +14,48 @@ module.exports = function(grunt) {
                 src: 'src/<%= pkg.fileName %>.js',
                 dest: 'build/<%= pkg.fileName %>.min.js'
             }
+        },
+        // Test settings
+        karma: {
+            unit: {
+                configFile: 'test/karma.conf.js',
+                singleRun: true
+            }
+        },
+        connect:{
+            options: {
+                hostname: 'localhost',
+            },
+            test: {
+                options: {
+                    port: 9001,
+                    middleware: function (connect) {
+                        console.log(connect);
+                        return [
+                            connect.static('.tmp'),
+                            connect.static('src')
+                        ];
+                    }
+                }
+            }
         }
     });
+
+    // Load Karma
+    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-contrib-connect');
+
+    grunt.registerTask('test', [
+        'connect:test',
+        'karma'
+    ]);
 
     // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-contrib-uglify');
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify']);
+    // grunt.registerTask('default', ['uglify']);
 
-    grunt.registerTask('build', ['uglify']);
+    grunt.registerTask('build', ['test', 'uglify']);
 
 };
