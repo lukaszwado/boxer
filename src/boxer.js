@@ -28,7 +28,7 @@
  * this._$$dataContainer - contains data
  * this._$$eventListeners - contains events
  * this._$$immutable - switch between mutable or immutable modes
- * this._$$protected - if object is protected against baypassing $set method bye use of yourState.method before it was initialised
+ * this._$$protected - if object is protected against baypassing $set method by use of aBoxer.method=val before it was initialised
  *
  * @param protect
  * @param immutable
@@ -249,7 +249,7 @@ Boxer.prototype._$$protect = function _$$protect( boxerObj ) {
 
     }
   } );
-}
+};
 
 /**
  *
@@ -372,7 +372,7 @@ Boxer.prototype._$$executeEvents = function _$$executeEvents( eventsArray, key, 
     ;
   for ( var i = 0; i < arrLength; i++ ) {
     if ( arr[ i ] ) {
-      var event = this._$$createEvent( key, newValue, oldValue, valueChanged, trigger, this, arr[ i ] )
+      var event = this._$$createEventObject( key, newValue, oldValue, valueChanged, trigger, this, arr[ i ] )
         ;
       arr[ i ]( event );
     }
@@ -392,10 +392,10 @@ Boxer.prototype._$$executeEvents = function _$$executeEvents( eventsArray, key, 
  * @param trigger
  * @param element
  * @param listenerFn
- * @returns {{keyOfTrigger: *, newValue: *, oldValue: *, valueChanged: *, trigger: *, stateElement: *, listenerFn: *, destroyEventListener: Function}}
+ * @returns {{keyOfTrigger: *, newValue: *, oldValue: *, valueChanged: *, trigger: *, boxer: boxer, listenerFn: *, destroyEventListener: Function}}
  * @private
  */
-Boxer.prototype._$$createEvent = function _$$createEvent( key, newValue, oldValue, valueChanged, trigger, element, listenerFn ) {
+Boxer.prototype._$$createEventObject = function _$$createEventObject( key, newValue, oldValue, valueChanged, trigger, boxer, listenerFn ) {
 
   var _that = this;
 
@@ -405,9 +405,11 @@ Boxer.prototype._$$createEvent = function _$$createEvent( key, newValue, oldValu
     oldValue: oldValue,
     valueChanged: valueChanged,
     trigger: trigger,
-    stateElement: element,
+    boxer: boxer,
     listenerFn: listenerFn,
-    destroyEventListener: Boxer.prototype._$$removeEventListenerFactory( _that._$$eventListeners[ trigger ], listenerFn )
+    destroyEventListener: _that._$$eventListeners
+      ? Boxer.prototype._$$removeEventListenerFactory( _that._$$eventListeners[ trigger ], listenerFn )  //TODO - potential memory leak
+      : null //to simplify tests
   };
 };
 
@@ -453,6 +455,7 @@ Boxer.prototype.$delete = function $delete( key ) {
 /**
  *
  * Creates function which removes event from event array
+ * TODO - refactor to use Map instead
  *
  * @param eventArray
  * @param fn

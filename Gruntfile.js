@@ -30,7 +30,6 @@ module.exports = function(grunt) {
                 options: {
                     port: 9001,
                     middleware: function (connect) {
-                        console.log(connect);
                         return [
                             connect.static('.tmp'),
                             connect.static('src')

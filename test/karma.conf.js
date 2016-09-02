@@ -1,7 +1,5 @@
 // Karma configuration
 // http://karma-runner.github.io/0.12/config/configuration-file.html
-// Generated on 2015-12-04 using
-// generator-karma 1.0.1
 
 module.exports = function(config) {
     'use strict';
@@ -23,7 +21,8 @@ module.exports = function(config) {
         files: [
             // required
             'demo/es6-shim.min.js',
-            "test/specs/*.js",
+            "src/boxer.js",
+            "test/specs/*.js"
             /* Views */
             // 'demo/views/boxer_demo.html'
         ],
