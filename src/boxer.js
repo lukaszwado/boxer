@@ -62,7 +62,7 @@ var Boxer = function Boxer( name, registered, immutable, protect ) {
   this._$$protected = proxySupport && protectSetting;
 
   if ( this._$$protected ) {
-    return this._$$protect( this );
+    return this._$$protect();
   }
 };
 
@@ -126,7 +126,7 @@ Boxer.prototype.$getName = function $getName() {
  * @returns Boxer
  */
 Boxer.prototype.$register = function $register() {
-  this.register( this );
+  this._$$register( this );
   return this;
 };
 
@@ -216,12 +216,11 @@ Boxer.prototype._wasPropertyInitialized = function _wasPropertyInitialized( key 
  *
  * Set proxy trap to prevent setting uninitialized properties - ES6 ONLY
  *
- * @param boxerObj
  * @returns {Proxy}
  * @private
  */
-Boxer.prototype._$$protect = function _$$protect( boxerObj ) {
-  return new Proxy( boxerObj, {
+Boxer.prototype._$$protect = function _$$protect() {
+  return new Proxy( this, {
     set: function ( _that, key, val ) {
       var isPermitted = key.indexOf( '_$$' ) === 0 //only private variable can be changed without prior definition
         , wasPropertyInitialised = _that._wasPropertyInitialized( key )
@@ -343,6 +342,9 @@ Boxer.prototype.$initProperty = function $initProperty( key ) {
       },
       set: function ( val ) {
         this.$set( key, val );
+      },
+      deleteProperty: function () {
+        this.$delete(key);
       }
     } );
   }
@@ -364,15 +366,15 @@ Boxer.prototype.$initProperty = function $initProperty( key ) {
  *
  */
 
-Boxer.prototype._$$executeEvents = function _$$executeEvents( eventsArray, key, newValue, oldValue, valueChanged, trigger ) {
+Boxer.prototype._$$executeEvents = function _$$executeEvents( eventsArray, key, newValue, oldValue, valueChanged ) {
   var arr = eventsArray || []
     , arrLength = arr.length
     ;
   for ( var i = 0; i < arrLength; i++ ) {
     if ( arr[ i ] ) {
-      var event = this._$$createEventObject( key, newValue, oldValue, valueChanged, trigger, this, arr[ i ] )
+      var event = this._$$createEventObject( key, newValue, oldValue, valueChanged, arr[ i ]._$$eventListenerId )
         ;
-      arr[ i ]( event );
+      arr[ i ].bind(this)( event );
     }
   }
 
@@ -380,34 +382,26 @@ Boxer.prototype._$$executeEvents = function _$$executeEvents( eventsArray, key, 
 };
 
 /**
- *
  * Creates event for event listener
- *
  * @param key
  * @param newValue
  * @param oldValue
  * @param valueChanged
  * @param trigger
- * @param element
+ * @param boxer
  * @param listenerFn
- * @returns {{keyOfTrigger: *, newValue: *, oldValue: *, valueChanged: *, trigger: *, boxer: boxer, listenerFn: *, destroyEventListener: Function}}
+ * @returns {{keyOfTrigger: *, newValue: *, oldValue: *, valueChanged: *, trigger: *, boxer: *, eventListenerId: string}}
  * @private
  */
-Boxer.prototype._$$createEventObject = function _$$createEventObject( key, newValue, oldValue, valueChanged, trigger, boxer, listenerFn ) {
 
-  var _that = this;
+Boxer.prototype._$$createEventObject = function _$$createEventObject( key, newValue, oldValue, valueChanged, boxerId ) {
 
   return {
     keyOfTrigger: key,
     newValue: newValue,
     oldValue: oldValue,
     valueChanged: valueChanged,
-    trigger: trigger,
-    boxer: boxer,
-    listenerFn: listenerFn,
-    destroyEventListener: _that._$$eventListeners
-      ? Boxer.prototype._$$removeEventListenerFactory( _that._$$eventListeners[ trigger ], listenerFn )  //TODO - potential memory leak
-      : null //to simplify tests
+    eventListenerId: boxerId
   };
 };
 
@@ -424,10 +418,10 @@ Boxer.prototype._$$createEventObject = function _$$createEventObject( key, newVa
 
 Boxer.prototype._$$fireEventListeners = function _$$fireEventListeners( key, newValue, oldValue, valueChanged ) {
   var commonEvents = this._$$eventListeners[ '_$$global' ];
-  this._$$executeEvents( commonEvents, key, newValue, oldValue, valueChanged, '_$$global' );
+  this._$$executeEvents( commonEvents, key, newValue, oldValue, valueChanged );
 
   var customEvents = this._$$eventListeners[ key ];
-  this._$$executeEvents( customEvents, key, newValue, oldValue, valueChanged, key );
+  this._$$executeEvents( customEvents, key, newValue, oldValue, valueChanged );
 
 };
 
@@ -440,9 +434,13 @@ Boxer.prototype._$$fireEventListeners = function _$$fireEventListeners( key, new
  */
 
 Boxer.prototype.$delete = function $delete( key ) {
-  this.state.delete( key );
+
+  delete this._$$dataContainer[key]; // delete associated data - TODO think about performance
+
+  this.$removeEventListener(key); // remove all events which associated with the key
+
   if ( this._$$immutable ) {
-    this._$$dataContainer = new Map( this.state );
+    this._$$dataContainer = new Map( this._$$dataContainer );
   }
 
   this._$$fireEventListeners( key );
@@ -461,15 +459,15 @@ Boxer.prototype.$delete = function $delete( key ) {
  * @private
  */
 
-Boxer.prototype._$$removeEventListenerFactory = function _$$removeEventListenerFactory( eventArray, fn ) {
-
-  return function () {
-    var indexInArray = eventArray.indexOf( fn )
-      , rest = eventArray.splice( indexInArray ).splice( 1 )
-      ;
-    eventArray.push.apply( eventArray, rest );
-  }
-};
+// Boxer.prototype._$$removeEventListenerFactory = function _$$removeEventListenerFactory( eventArray, fn ) {
+//
+//   return function () {
+//     var indexInArray = eventArray.indexOf( fn )
+//       , rest = eventArray.splice( indexInArray ).splice( 1 )
+//       ;
+//     eventArray.push.apply( eventArray, rest );
+//   }
+// };
 
 /**
  *
@@ -484,13 +482,16 @@ Boxer.prototype._$$removeEventListenerFactory = function _$$removeEventListenerF
 
 Boxer.prototype.$addEventListener = function $addEventListener( arg1, arg2 ) {
 
-  var currentKey = arg1
-    , currentFn = arg2
+  var currentKey
+    , currentFn
     ;
 
-  if ( typeof currentKey === 'function' && !currentFn ) {
+  if ( typeof arg1 === 'function' && !arg2 ) { // when there is no 2nd arguments it means that event should be added to global scope so whe have to switch variables
     currentKey = '_$$global';
     currentFn = arg1;
+  } else {
+    currentKey = arg1;
+    currentFn = arg2;
   }
 
   if ( typeof currentFn !== 'function' ) {
@@ -498,11 +499,17 @@ Boxer.prototype.$addEventListener = function $addEventListener( arg1, arg2 ) {
     return null;
   }
 
+  //create event listeners array if doesn't exist
   if ( !(currentKey in this._$$eventListeners) ) {
     this._$$eventListeners[ currentKey ] = [];
   }
+
+  var currentEventListenersArray = this._$$eventListeners[ currentKey ];
+
+  currentFn._$$eventListenerId = currentKey + '.' + currentEventListenersArray.length;
+
   this._$$eventListeners[ currentKey ].push( currentFn );
-  return this._$$removeEventListenerFactory( this._$$eventListeners[ currentKey ], currentFn );
+  return currentFn._$$eventListenerId; // event listener id allow as easily remove event without creating any references and new objects in memory
 };
 
 /**
@@ -510,25 +517,24 @@ Boxer.prototype.$addEventListener = function $addEventListener( arg1, arg2 ) {
  * If key is present it will remove all events from events[key]
  * if not it will remove all events
  *
- * TODO: how memory leaks prevention can be improved?
- *
  * @param key
  * @returns {Boxer}
  */
 
-Boxer.prototype.$removeEventListeners = function $removeAllEvents( key ) {
+Boxer.prototype.$removeEventListener = function $removeAllEvents( eventName, eventId ) {
   /* remove events for requested key only */
-  if ( typeof key !== 'undefined' ) {
-    this._$$eventListeners[ key ].length = 0;
+  var isEventNameDefined = typeof eventName !== 'undefined'
+    , isEventIdDefined = typeof eventId !== 'undefined';
 
-    /* remove all events */
-  } else {
+  if ( isEventNameDefined && isEventIdDefined && eventId in this._$$eventListeners[ eventName ]) { // remove requested function (single)
+    this._$$eventListeners[ eventName ][ eventId ] = null;
+  } else if ( isEventNameDefined ) { // remove all events for requested listener
+    this._$$eventListeners[ eventName ].length = 0;
+  } else if ( eventId ) { // remove all events for object
     for ( var key in this._$$eventListeners ) {
       this._$$eventListeners[ key ].length = 0;
     }
   }
-
-  console.log( '$removeEventListeners', key, JSON.stringify( this._$$eventListeners ) );
 
   return this;
 };
