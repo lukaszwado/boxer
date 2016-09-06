@@ -8,30 +8,30 @@ describe( 'Boxer - unit tests.', function () {
   describe( 'Initialisation.', function () {
     it( 'should init boxer with default settings', function () {
 
-      var mybxr = new Boxer()
+      var bxr1 = new Boxer()
         ;
 
-      expect( mybxr._$$name ).toEqual( '' ); // check if the name is correct
-      expect( mybxr._$$registeredId ).toEqual( undefined ); // check if the id is correct
-      expect( mybxr._$$immutable ).toBe( true ); // check if the immutability
-      expect( mybxr._$$protected ).toBe( false ); // Phantom doesn't support ES6
+      expect( bxr1._$$name ).toEqual( '' ); // check if the name is correct
+      expect( bxr1._$$registeredId ).toEqual( undefined ); // check if the id is correct
+      expect( bxr1._$$immutable ).toBe( true ); // check if the immutability
+      expect( bxr1._$$protected ).toBe( false ); // Phantom doesn't support ES6
     } );
 
     it( 'should init boxer with requested settings', function () {
 
-      var mybxr = new Boxer( 'bxr2000', true, true, true )
+      var bxr1 = new Boxer( { name: 'bxr2000', register: true, immutable: true, protect: true } )
         ;
 
-      expect( mybxr._$$name ).toBe( 'bxr2000' ); // check if the name is correct
-      expect( mybxr._$$registeredId ).toEqual( 0 ); // check if the id is correct
-      expect( mybxr._$$immutable ).toBe( true ); // check if the immutability
-      expect( mybxr._$$protected ).toBe( false ); // Phantom doesn't support ES6
+      expect( bxr1._$$name ).toBe( 'bxr2000' ); // check if the name is correct
+      expect( bxr1._$$registeredId ).toEqual( 0 ); // check if the id is correct
+      expect( bxr1._$$immutable ).toBe( true ); // check if the immutability
+      expect( bxr1._$$protected ).toBe( false ); // Phantom doesn't support ES6
     } );
   } );
   describe( 'Private methods and properties.', function () {
 
     it( 'should register boxer in _$$boxerStore', function () {
-      var bxr1 = new Boxer( 'c', true )
+      var bxr1 = new Boxer( { name: 'c', register: true } )
         ;
 
       expect( Boxer.prototype._$$boxerStore.boxers[ bxr1._$$registeredId ] ).toBe( bxr1 );
@@ -147,9 +147,9 @@ describe( 'Boxer - unit tests.', function () {
 
     it( 'should return requested boxer', function () {
 
-      var bxr1 = new Boxer( 'Boxer 1', true );
-      var bxr2 = new Boxer( 'Boxer 2', true );
-      var bxr3 = new Boxer( 'Boxer 3', true );
+      var bxr1 = new Boxer( { name: 'Boxer 1', register: true } );
+      var bxr2 = new Boxer( { name: 'Boxer 2', register: true } );
+      var bxr3 = new Boxer( { name: 'Boxer 3', register: true } );
       var id1 = bxr1.$getId();
       var id2 = bxr2.$getId();
       var id3 = bxr3.$getId();
@@ -160,7 +160,7 @@ describe( 'Boxer - unit tests.', function () {
     } );
 
     it( 'should return boxer name', function () {
-      var bxr1 = new Boxer( 'Cool Name 2000' );
+      var bxr1 = new Boxer( { name: 'Cool Name 2000' } );
       expect( bxr1.$getName() ).toBe( 'Cool Name 2000' );
     } );
 
@@ -175,7 +175,7 @@ describe( 'Boxer - unit tests.', function () {
     } );
 
     it( 'should return boxer ID', function () {
-      var bxr1 = new Boxer( void(0), true );
+      var bxr1 = new Boxer( { register: true } );
       expect( typeof bxr1.$getId() ).toBe( 'number' );
     } );
 
@@ -311,7 +311,7 @@ describe( 'Boxer - unit tests.', function () {
       expect( specificCallsCount ).toBe( 1 );
       expect( globalCallsCount ).toBe( 2 );
 
-      bxr1.$removeEventListeners('x');
+      bxr1.$removeEventListeners( 'x' );
 
       bxr1.$set( 'x', 3 );
       bxr1.$set( 'x2', 4 );
@@ -334,7 +334,7 @@ describe( 'Boxer - unit tests.', function () {
 
       var idToRemove = bxr1.$addEventListener( 'x', function () {
         toRemoveCount++;
-      } ).split('.');
+      } ).split( '.' );
 
       bxr1.$set( 'x', 2 ); // specificCallsCount++, globalCallsCount++
       bxr1.$set( 'x2', 2 ); // globalCallsCount++
@@ -343,7 +343,7 @@ describe( 'Boxer - unit tests.', function () {
       expect( specificCallsCount ).toBe( 1 );
       expect( globalCallsCount ).toBe( 2 );
 
-      bxr1.$removeEventListeners(idToRemove[0], idToRemove[1]);
+      bxr1.$removeEventListeners( idToRemove[ 0 ], idToRemove[ 1 ] );
 
       bxr1.$set( 'x', 3 );
       bxr1.$set( 'x2', 4 );
@@ -353,18 +353,18 @@ describe( 'Boxer - unit tests.', function () {
       expect( globalCallsCount ).toBe( 4 );
     } );
 
-    it('should add multiple properties', function(){
+    it( 'should add multiple properties', function () {
       var bxr1 = new Boxer();
 
-      bxr1.$setMultiple({
+      bxr1.$setMultiple( {
         a: 1,
         b: 2
-      });
+      } );
 
       expect( bxr1.a ).toBe( 1 );
-      expect( bxr1.$get('b') ).toBe( 2 );
+      expect( bxr1.$get( 'b' ) ).toBe( 2 );
 
-    });
+    } );
 
 
   } );

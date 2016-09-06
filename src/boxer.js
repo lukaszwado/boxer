@@ -10,7 +10,6 @@
 
 /**
  *
- * TODO - config boxer by object
  * TODO - think about accessing boxer via ID instead passing references all around (help to prevent memory leaks)
  * TODO - todo add destroy/unregister method
  * TODO - associate name and ID, force unique names
@@ -29,16 +28,17 @@
  * this._$$immutable - switch between mutable or immutable modes
  * this._$$protected - if object is protected against baypassing $set method by use of aBoxer.method=val before it was initialised
  *
- * @param protect
- * @param immutable
+ * @param config( name, register, immutable, protect )
  * @constructor
  */
 
-var Boxer = function Boxer( name, registered, immutable, protect ) {
+var Boxer = function Boxer( config ) {
 
-  this._$$name = name || ''; // Makes debugging a bit easier
+  var cfg = config || {};
 
-  if ( registered ) { // register boxer in global scope
+  this._$$name = cfg.name || ''; // Makes debugging a bit easier
+
+  if ( cfg.register ) { // register boxer in global scope
     this._$$register( this );
   }
 
@@ -51,12 +51,12 @@ var Boxer = function Boxer( name, registered, immutable, protect ) {
     '_$$global': []
   };
   /* Is immutable */
-  this._$$immutable = this._$$booleanOrTrue( immutable );//typeof immutable !== 'boolean' ? true : immutable;
+  this._$$immutable = this._$$booleanOrTrue( cfg.immutable );//typeof immutable !== 'boolean' ? true : immutable;
 
   this._$$frozen = false; //if object is frozen you cannot assign new values to its properties
 
   /* Set proxy trap to prevent setting uninitialized properties - ES6 ONLY */
-  var protectSetting = this._$$booleanOrTrue( protect ) //protect !== 'boolean' ? true : protect
+  var protectSetting = this._$$booleanOrTrue( cfg.protect ) //protect !== 'boolean' ? true : protect
     , proxySupport = this._$$isProxySupported()
     ;
 
