@@ -10,7 +10,9 @@
 
 /**
  *
+ * TODO - config boxer by object
  * TODO - think about accessing boxer via ID instead passing references all around (help to prevent memory leaks)
+ * TODO - todo add destroy/unregister method
  * TODO - associate name and ID, force unique names
  * TODO - add property to "set multiple"
  * TODO - improve error logging
@@ -92,12 +94,19 @@ Boxer.prototype.$getBoxerById = function $getBoxerById( id ) {
  * @returns Boxer
  * @private
  */
-Boxer.prototype._$$register = function _$$register( boxer ) {
+Boxer.prototype._$$register = function _$$register() {
+
+  var isContextCorrect = this instanceof Boxer;
+
+  if ( !isContextCorrect ) {
+    console.error( 'Incorrect context expected instance of boxer but receive constructor!' );
+    return this;
+  }
 
   var isRegistered = typeof this._$$registeredId === 'number';
 
   if ( !isRegistered ) {
-    this._$$boxerStore.boxers[ this._$$boxerStore.nextFreeId ] = boxer;
+    this._$$boxerStore.boxers[ this._$$boxerStore.nextFreeId ] = this;
     this._$$registeredId = this._$$boxerStore.nextFreeId;
     this._$$boxerStore.nextFreeId++;
   } else {
@@ -126,7 +135,7 @@ Boxer.prototype.$getName = function $getName() {
  * @returns Boxer
  */
 Boxer.prototype.$register = function $register() {
-  this._$$register( this );
+  this._$$register();
   return this;
 };
 
@@ -136,7 +145,7 @@ Boxer.prototype.$register = function $register() {
  * @returns {number||null}
  */
 Boxer.prototype.$getId = function $getId() {
-  return this._$$registeredId || null;
+  return this._$$registeredId;
 };
 
 /**
@@ -146,12 +155,9 @@ Boxer.prototype.$getId = function $getId() {
  * @param boolean
  * @private
  */
-Boxer.prototype.$setName = function $setName( name, register ) {
+Boxer.prototype.$setName = function $setName( name ) {
   if ( this._$$name === '' ) {
     this._$$name = name;
-    if ( register ) {
-      this._$$register( this );
-    }
   } else {
     console.log( 'Boxer cannot be renamed', {
       boxer: this
@@ -208,7 +214,7 @@ Boxer.prototype._$$isProxySupported = function _$$isProxySupported() {
   return typeof Proxy !== 'undefined';
 };
 
-Boxer.prototype._wasPropertyInitialized = function _wasPropertyInitialized( key ) {
+Boxer.prototype._$$wasPropertyInitialized = function _$$wasPropertyInitialized( key ) {
   return !!Object.getOwnPropertyDescriptor( this, key );
 };
 
@@ -223,7 +229,7 @@ Boxer.prototype._$$protect = function _$$protect() {
   return new Proxy( this, {
     set: function ( _that, key, val ) {
       var isPermitted = key.indexOf( '_$$' ) === 0 //only private variable can be changed without prior definition
-        , wasPropertyInitialised = _that._wasPropertyInitialized( key )
+        , wasPropertyInitialised = _that._$$wasPropertyInitialized( key )
         ;
 
       /* TODO - improve setter performance */
@@ -266,7 +272,7 @@ Boxer.prototype.$isProtected = function _$$isProtected() {
  * @returns {boolean}
  */
 
-Boxer.prototype.$isMutable = function _$$isMutable() {
+Boxer.prototype.$isMutable = function $$isMutable() {
   return !this._$$immutable;
 };
 
@@ -296,7 +302,7 @@ Boxer.prototype.$get = function $get( prop ) {
 Boxer.prototype.$set = function $set( key, val ) {
 
   if ( key === '_$$global' ) {
-    console.error( '_$$global is not allowed as a key because it is used as a wildcard event identifier' );
+    console.error( '_$$global is not allowed as a key because it is used as a global events identifier' );
     console.trace();
   } else if ( !this._$$frozen ) {
 
@@ -342,9 +348,6 @@ Boxer.prototype.$initProperty = function $initProperty( key ) {
       },
       set: function ( val ) {
         this.$set( key, val );
-      },
-      deleteProperty: function () {
-        this.$delete( key );
       }
     } );
   }
@@ -435,9 +438,9 @@ Boxer.prototype._$$fireEventListeners = function _$$fireEventListeners( key, new
 
 Boxer.prototype.$delete = function $delete( key ) {
 
-  delete this._$$dataContainer[ key ]; // delete associated data - TODO think about performance
+  delete this._$$dataContainer.delete( key ); // delete associated data
 
-  this.$removeEventListener( key ); // remove all events which associated with the key
+  this.$removeEventListeners( key ); // remove all events associated with the key
 
   if ( this._$$immutable ) {
     this._$$dataContainer = new Map( this._$$dataContainer );
@@ -494,6 +497,10 @@ Boxer.prototype.$addEventListener = function $addEventListener( arg1, arg2 ) {
     currentFn = arg2;
   }
 
+  if ( currentKey !== '_$$global' ) { // if it is not global make sure that property is initialised
+    this.$initProperty( currentKey ); // TODO - investigate what will happen when event is named as private properties
+  }
+
   if ( typeof currentFn !== 'function' ) {
     console.error( 'Invalid event listener type: ', typeof currentFn );
     return null;
@@ -517,11 +524,12 @@ Boxer.prototype.$addEventListener = function $addEventListener( arg1, arg2 ) {
  * If key is present it will remove all events from events[key]
  * if not it will remove all events
  *
- * @param key
+ * @param eventName
+ * @param eventId
  * @returns {Boxer}
  */
 
-Boxer.prototype.$removeEventListener = function $removeAllEvents( eventName, eventId ) {
+Boxer.prototype.$removeEventListeners = function $removeEventListeners( eventName, eventId ) {
   /* remove events for requested key only */
   var isEventNameDefined = typeof eventName !== 'undefined'
     , isEventIdDefined = typeof eventId !== 'undefined';
@@ -529,10 +537,10 @@ Boxer.prototype.$removeEventListener = function $removeAllEvents( eventName, eve
   if ( isEventNameDefined && isEventIdDefined && eventId in this._$$eventListeners[ eventName ] ) { // remove requested function (single)
     this._$$eventListeners[ eventName ][ eventId ] = null;
   } else if ( isEventNameDefined ) { // remove all events for requested listener
-    this._$$eventListeners[ eventName ].length = 0;
-  } else if ( eventId ) { // remove all events for object
+    delete this._$$eventListeners[ eventName ];
+  } else { // remove all events for object
     for ( var key in this._$$eventListeners ) {
-      this._$$eventListeners[ key ].length = 0;
+      delete this._$$eventListeners[ key ];
     }
   }
 
