@@ -182,8 +182,8 @@ describe( 'Boxer - unit tests.', function () {
     it( 'should set boxer name', function () {
       var bxr1 = new Boxer();
       expect( bxr1.$getName() ).toBe( '' );
-      bxr1.$setName( 'Name 2000 Cool' )
-      expect( bxr1.$getName() ).toBe( 'Name 2000 Cool' );
+      bxr1.$setName( 'Name 2000 is Cool' )
+      expect( bxr1.$getName() ).toBe( 'Name 2000 is Cool' );
     } );
 
     it( 'should freezer and unfreeze boxer', function () {

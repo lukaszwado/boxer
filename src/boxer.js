@@ -39,7 +39,7 @@ var Boxer = function Boxer( config ) {
   this._$$name = cfg.name || ''; // Makes debugging a bit easier
 
   if ( cfg.register ) { // register boxer in global scope
-    this._$$register( this );
+    this._$$register();
   }
 
   /* Data container */
