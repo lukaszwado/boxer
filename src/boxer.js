@@ -344,7 +344,7 @@ Boxer.prototype.$initProperty = function $initProperty( key ) {
         this.$set( key, val );
       },
       deleteProperty: function () {
-        this.$delete(key);
+        this.$delete( key );
       }
     } );
   }
@@ -374,7 +374,7 @@ Boxer.prototype._$$executeEvents = function _$$executeEvents( eventsArray, key, 
     if ( arr[ i ] ) {
       var event = this._$$createEventObject( key, newValue, oldValue, valueChanged, arr[ i ]._$$eventListenerId )
         ;
-      arr[ i ].bind(this)( event );
+      arr[ i ]( event );
     }
   }
 
@@ -435,9 +435,9 @@ Boxer.prototype._$$fireEventListeners = function _$$fireEventListeners( key, new
 
 Boxer.prototype.$delete = function $delete( key ) {
 
-  delete this._$$dataContainer[key]; // delete associated data - TODO think about performance
+  delete this._$$dataContainer[ key ]; // delete associated data - TODO think about performance
 
-  this.$removeEventListener(key); // remove all events which associated with the key
+  this.$removeEventListener( key ); // remove all events which associated with the key
 
   if ( this._$$immutable ) {
     this._$$dataContainer = new Map( this._$$dataContainer );
@@ -508,7 +508,7 @@ Boxer.prototype.$addEventListener = function $addEventListener( arg1, arg2 ) {
 
   currentFn._$$eventListenerId = currentKey + '.' + currentEventListenersArray.length;
 
-  this._$$eventListeners[ currentKey ].push( currentFn );
+  this._$$eventListeners[ currentKey ].push( currentFn.bind( this ) ); // push function to array and bind this as its context
   return currentFn._$$eventListenerId; // event listener id allow as easily remove event without creating any references and new objects in memory
 };
 
@@ -526,7 +526,7 @@ Boxer.prototype.$removeEventListener = function $removeAllEvents( eventName, eve
   var isEventNameDefined = typeof eventName !== 'undefined'
     , isEventIdDefined = typeof eventId !== 'undefined';
 
-  if ( isEventNameDefined && isEventIdDefined && eventId in this._$$eventListeners[ eventName ]) { // remove requested function (single)
+  if ( isEventNameDefined && isEventIdDefined && eventId in this._$$eventListeners[ eventName ] ) { // remove requested function (single)
     this._$$eventListeners[ eventName ][ eventId ] = null;
   } else if ( isEventNameDefined ) { // remove all events for requested listener
     this._$$eventListeners[ eventName ].length = 0;

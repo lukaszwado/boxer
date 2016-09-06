@@ -108,32 +108,14 @@ describe( 'Boxer - unit tests.', function () {
     } );
 
     it( 'should create event object', function () {
-      var event = Boxer.prototype._$$createEventObject( 1, 2, 3, 4, 5, 6, 7 );
+      var event = Boxer.prototype._$$createEventObject( 'kot', 'nv', 'ov', 'vc', 'eli' );
 
       expect( event ).toEqual( {
-        keyOfTrigger: 1,
-        newValue: 2,
-        oldValue: 3,
-        valueChanged: 4,
-        trigger: 5,
-        boxer: 6,
-        listenerFn: 7,
-        destroyEventListener: null
-      } );
-    } );
-
-    it( 'should create event object', function () {
-      var event = Boxer.prototype._$$createEventObject( 1, 2, 3, 4, 5, 6, 7 );
-
-      expect( event ).toEqual( {
-        keyOfTrigger: 1,
-        newValue: 2,
-        oldValue: 3,
-        valueChanged: 4,
-        trigger: 5,
-        boxer: 6,
-        listenerFn: 7,
-        destroyEventListener: null
+        keyOfTrigger: 'kot',
+        newValue: 'nv',
+        oldValue: 'ov',
+        valueChanged: 'vc',
+        eventListenerId: 'eli'
       } );
     } );
 
@@ -171,26 +153,29 @@ describe( 'Boxer - unit tests.', function () {
 
     } );
 
-    it( 'should create function which will remove requested event from the array', function () {
-
-      var arr = []
-        , fn1 = function fn1() {}
-        , fn2 = function fn2() {}
-        , fn3 = function fn3() {}
-        ;
-
-      arr.push( fn1 );
-      arr.push( fn2 );
-      arr.push( fn3 );
-
-      var removeFn = Boxer.prototype._$$removeEventListenerFactory( arr, fn2 );
-
-      removeFn();
-
-      expect( arr[ 0 ].name ).toEqual( 'fn1' );
-      expect( arr[ 1 ].name ).toEqual( 'fn3' );
-
-    } );
+    // it( 'should create function which will remove requested event from the array', function () {
+    //
+    //   var arr = []
+    //     , fn1 = function fn1() {
+    //     }
+    //     , fn2 = function fn2() {
+    //     }
+    //     , fn3 = function fn3() {
+    //     }
+    //     ;
+    //
+    //   arr.push( fn1 );
+    //   arr.push( fn2 );
+    //   arr.push( fn3 );
+    //
+    //   var removeFn = Boxer.prototype._$$removeEventListenerFactory( arr, fn2 );
+    //
+    //   removeFn();
+    //
+    //   expect( arr[ 0 ].name ).toEqual( 'fn1' );
+    //   expect( arr[ 1 ].name ).toEqual( 'fn3' );
+    //
+    // } );
 
   } );
 } );
