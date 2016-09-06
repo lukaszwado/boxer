@@ -14,7 +14,6 @@
  * TODO - think about accessing boxer via ID instead passing references all around (help to prevent memory leaks)
  * TODO - todo add destroy/unregister method
  * TODO - associate name and ID, force unique names
- * TODO - add property to "set multiple"
  * TODO - improve error logging
  * TODO - build proof of concept with angular 2
  * TODO - npm
@@ -541,6 +540,22 @@ Boxer.prototype.$removeEventListeners = function $removeEventListeners( eventNam
   } else { // remove all events for object
     for ( var key in this._$$eventListeners ) {
       delete this._$$eventListeners[ key ];
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Set multiple properties
+ * @param obj
+ * @returns {Boxer}
+ */
+Boxer.prototype.$setMultiple = function $setMultiple( obj ) {
+
+  for ( var key in obj ) {
+    if ( obj.hasOwnProperty( key ) ) {
+      this.$set( key, obj[ key ] );
     }
   }
 

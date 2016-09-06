@@ -353,6 +353,19 @@ describe( 'Boxer - unit tests.', function () {
       expect( globalCallsCount ).toBe( 4 );
     } );
 
+    it('should add multiple properties', function(){
+      var bxr1 = new Boxer();
+
+      bxr1.$setMultiple({
+        a: 1,
+        b: 2
+      });
+
+      expect( bxr1.a ).toBe( 1 );
+      expect( bxr1.$get('b') ).toBe( 2 );
+
+    });
+
 
   } );
 } );
