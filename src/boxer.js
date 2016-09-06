@@ -10,14 +10,12 @@
 
 /**
  *
- * TODO - should all of the data be immutable when accessing them and object is set to be immutable?
- * TODO - think if accessing Boxers by ID has sens when you can pass direct reference instead
- * TODO - think if name is necessary - maybe it's better to have ID only
+ * TODO - think about accessing boxer via ID instead passing references all around (help to prevent memory leaks)
+ * TODO - associate name and ID, force unique names
  * TODO - add property to "set multiple"
  * TODO - improve error logging
- * TODO - build proof of design with angular 2
- * TODO - create proper build process with Gulp or Grunt
- * TODO - publish with npm
+ * TODO - build proof of concept with angular 2
+ * TODO - npm
  *
  */
 
@@ -49,7 +47,7 @@ var Boxer = function Boxer( name, registered, immutable, protect ) {
   /* Event Listeners */
   this._$$eventListeners = {
     /* Global event listeners */
-    '__*__': []
+    '_$$global': []
   };
   /* Is immutable */
   this._$$immutable = this._$$booleanOrTrue( immutable );//typeof immutable !== 'boolean' ? true : immutable;
@@ -298,8 +296,8 @@ Boxer.prototype.$get = function $get( prop ) {
 
 Boxer.prototype.$set = function $set( key, val ) {
 
-  if ( key === '__*__' ) {
-    console.error( '__*__ is not allowed as a key because it is used as a wildcard event identifier' );
+  if ( key === '_$$global' ) {
+    console.error( '_$$global is not allowed as a key because it is used as a wildcard event identifier' );
     console.trace();
   } else if ( !this._$$frozen ) {
 
@@ -425,8 +423,8 @@ Boxer.prototype._$$createEventObject = function _$$createEventObject( key, newVa
  */
 
 Boxer.prototype._$$fireEventListeners = function _$$fireEventListeners( key, newValue, oldValue, valueChanged ) {
-  var commonEvents = this._$$eventListeners[ '__*__' ];
-  this._$$executeEvents( commonEvents, key, newValue, oldValue, valueChanged, '__*__' );
+  var commonEvents = this._$$eventListeners[ '_$$global' ];
+  this._$$executeEvents( commonEvents, key, newValue, oldValue, valueChanged, '_$$global' );
 
   var customEvents = this._$$eventListeners[ key ];
   this._$$executeEvents( customEvents, key, newValue, oldValue, valueChanged, key );
@@ -491,7 +489,7 @@ Boxer.prototype.$addEventListener = function $addEventListener( arg1, arg2 ) {
     ;
 
   if ( typeof currentKey === 'function' && !currentFn ) {
-    currentKey = '__*__';
+    currentKey = '_$$global';
     currentFn = arg1;
   }
 
