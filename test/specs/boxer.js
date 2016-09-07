@@ -334,7 +334,7 @@ describe( 'Boxer - unit tests.', function () {
 
       var idToRemove = bxr1.$addEventListener( 'x', function () {
         toRemoveCount++;
-      } ).split( '.' );
+      } );
 
       bxr1.$set( 'x', 2 ); // specificCallsCount++, globalCallsCount++
       bxr1.$set( 'x2', 2 ); // globalCallsCount++
@@ -343,7 +343,7 @@ describe( 'Boxer - unit tests.', function () {
       expect( specificCallsCount ).toBe( 1 );
       expect( globalCallsCount ).toBe( 2 );
 
-      bxr1.$removeEventListeners( idToRemove[ 0 ], idToRemove[ 1 ] );
+      bxr1.$removeEventListeners( 'x', idToRemove );
 
       bxr1.$set( 'x', 3 );
       bxr1.$set( 'x2', 4 );

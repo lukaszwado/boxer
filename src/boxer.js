@@ -515,7 +515,7 @@ Boxer.prototype.$addEventListener = function $addEventListener( arg1, arg2 ) {
 
   var currentEventListenersArray = this._$$eventListeners[ currentKey ];
 
-  currentFn._$$eventListenerId = currentKey + '.' + currentEventListenersArray.length;
+  currentFn._$$eventListenerId = currentEventListenersArray.length;
 
   this._$$eventListeners[ currentKey ].push( currentFn );
 
