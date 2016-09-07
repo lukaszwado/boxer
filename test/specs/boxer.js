@@ -369,4 +369,3 @@ describe( 'Boxer - unit tests.', function () {
 
   } );
 } );
-
