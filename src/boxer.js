@@ -13,12 +13,10 @@
  * TODO - think about accessing boxer via ID instead passing references all around (help to prevent memory leaks)
  * TODO - figure out why two different arrays with the same values used as a key returns the same value - I guess storing events has to be improve and we have to use map instead object there
  * TODO - todo add destroy/unregister method
- * TODO - associate name and ID, force unique names
+ * TODO - associate name and ID, force unique names ?
  * TODO - improve error logging
  * TODO - build proof of concept with angular 2
  * TODO - npm
- * TODO - simplify event ID
- * TODO - build forEach function
  *
  */
 
@@ -379,7 +377,7 @@ Boxer.prototype._$$executeEvents = function _$$executeEvents( eventsArray, key, 
     if ( arr[ i ] ) {
       var event = this._$$createEventObject( key, newValue, oldValue, valueChanged, arr[ i ]._$$eventListenerId )
         ;
-      arr[ i ].call(this, event);
+      arr[ i ].call( this, event );
     }
   }
 
@@ -563,5 +561,15 @@ Boxer.prototype.$setMultiple = function $setMultiple( obj ) {
     }
   }
 
+  return this;
+};
+
+/**
+ * Shortcut to iterate over the map
+ * @param callback
+ * @returns {Boxer}
+ */
+Boxer.prototype.$forEach = function $forEach( callback ) {
+  this.$get().forEach( callback );
   return this;
 };

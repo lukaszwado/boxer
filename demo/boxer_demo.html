@@ -19,11 +19,13 @@
         console.log( 'global changed', ev );
     } );
 
-    for ( var key in myState ) {
-        if ( myState.hasOwnProperty( key ) ) {
-            console.log( key );
-        }
-    }
+    myState.x = 1;
+    myState.$set('y', 2);
+    myState.$set('y2', 3);
+
+    myState.$forEach(function(value, key, map){
+        console.log('vk', value, key, map);
+    });
 </script>
 </body>
 </html>
